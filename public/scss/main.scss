@@ -1,0 +1,22 @@
+// 1. Surcharge des variables avant Bootstrap
+@import "variables";
+
+// 2. Import de Bootstrap
+@import "~bootstrap/scss/bootstrap";
+
+// 3. Composants du thème
+@import "~@/seodash/scss/components/cards";
+@import "~@/seodash/scss/components/sidebar";
+
+// 4. Styles personnalisés
+.admin-wrapper {
+    .main-content {
+        padding: 30px;
+        margin-left: 280px; // Largeur du sidebar
+        transition: all 0.3s;
+    }
+    
+    &.menu-collapsed .main-content {
+        margin-left: 80px;
+    }
+}
