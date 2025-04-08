@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Réponse{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="mb-4">
+            {% if signalement %}
+                Réponse pour le signalement #{{ signalement.idSignalement }}
+            {% else %}
+                Créer une nouvelle Réponse
+            {% endif %}
+        </h1>
+
+        {% if signalement %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Détails du signalement</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Type :</strong> {{ signalement.typeSignalement }}</p>
+                    <p><strong>Description :</strong> {{ signalement.description }}</p>
+                    <p><strong>Date :</strong> {{ signalement.dateSignalement|date('d/m/Y H:i') }}</p>
+                </div>
+            </div>
+        {% endif %}
+
+        {{ form_start(form) }}
+            {{ form_widget(form) }}
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+                <a href="{{ path('app_reponse_index') }}" class="btn btn-secondary ml-2">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                </a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

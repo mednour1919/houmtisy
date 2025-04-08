@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signalement index{% endblock %}
+
+{% block body %}
+    <h1>Signalement index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id_signalement</th>
+                <th>Type_signalement</th>
+                <th>Description</th>
+                <th>Date_signalement</th>
+                <th>Image</th>
+                <th>Statut</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for signalement in signalements %}
+            <tr>
+                <td>{{ signalement.idSignalement }}</td>
+                <td>{{ signalement.typeSignalement }}</td>
+                <td>{{ signalement.description }}</td>
+                <td>{{ signalement.dateSignalement ? signalement.dateSignalement|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ signalement.image }}</td>
+                <td>{{ signalement.statut }}</td>
+                <td>
+                    <a href="{{ path('app_signalement_show', {'id_signalement': signalement.id_signalement}) }}">show</a>
+                    <a href="{{ path('app_signalement_edit', {'id_signalement': signalement.id_signalement}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="7">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_signalement_new') }}">Create new</a>
+{% endblock %}
