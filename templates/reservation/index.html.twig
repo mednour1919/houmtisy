@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reservation index{% endblock %}
+
+{% block body %}
+    <h1>Reservation index</h1>
+
+    {# Formulaire de recherche #}
+    <form action="{{ path('app_reservation_search') }}" method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Rechercher une réservation..." value="{{ query|default('') }}">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </div>
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>IdReservation</th>
+                <th>NumPLACE</th>
+                <th>Date_Reservation</th>
+                <th>Temps</th>
+                <th>Marque</th>
+                <th>IdStation</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation.idReservation }}</td>
+                <td>{{ reservation.numPLACE }}</td>
+                <td>{{ reservation.dateReservation }}</td>
+                <td>{{ reservation.temps }}</td>
+                <td>{{ reservation.marque }}</td>
+                <td>{{ reservation.idStation }}</td>
+                <td>
+                    <a href="{{ path('app_reservation_show', {'idReservation': reservation.idReservation}) }}">show</a>
+                    <a href="{{ path('app_reservation_edit', {'idReservation': reservation.idReservation}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="7">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_reservation_new') }}">Create new</a>
+{% endblock %}
