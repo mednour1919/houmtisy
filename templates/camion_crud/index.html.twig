@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Camion index{% endblock %}
+
+{% block body %}
+    <h1>Liste des Camions</h1>
+
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <!-- Formulaire de recherche -->
+        <form action="" method="GET" class="d-flex gap-2">
+            <input type="text" name="query" placeholder="Recherche..." 
+                   value="{{ app.request.query.get('query') }}" class="form-control">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+
+        <!-- Boutons d'actions -->
+        <div class="btn-group">
+            <a href="{{ path('app_camion_export_csv') }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-arrow-down"></i> Exporter CSV
+            </a>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="bi bi-file-earmark-arrow-up"></i> Importer CSV
+            </button>
+            <a href="{{ path('app_camion_c_r_u_d_new') }}" class="btn btn-warning">
+                <i class="bi bi-plus-circle"></i> Nouveau camion
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal d'import -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Importer des camions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ path('app_camion_import_csv') }}" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">Sélectionnez un fichier CSV</label>
+                            <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv" required>
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>Format attendu :</strong> Colonnes "Type", "Statut", "Capacity", "Nom", "Image"
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm d-none" id="importSpinner"></span>
+                            Importer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>Capacity</th>
+                <th>Image</th>
+                <th>Nom</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set query = app.request.query.get('query') %}
+        {% set filteredCamions = camions %}
+
+        {% if query %}
+            {% set filteredCamions = camions|filter(item => 
+                item.nom matches '/' ~ query ~ '/i' or 
+                item.type matches '/' ~ query ~ '/i' or 
+                item.statut matches '/' ~ query ~ '/i'
+            ) %}
+        {% endif %}
+
+        {% for camion in filteredCamions %}
+            <tr>
+                <td>{{ camion.type }}</td>
+                <td>{{ camion.statut }}</td>
+                <td>{{ camion.capacity }}</td>
+                <td>
+                    {% if camion.image %}
+                        <img src="/uploads/{{ camion.image }}" width="100" style="max-height: 80px; object-fit: cover;">
+                    {% else %}
+                        <span class="text-muted">Aucune image</span>
+                    {% endif %}
+                </td>
+                <td>{{ camion.nom }}</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{{ path('app_camion_c_r_u_d_show', {'id': camion.id}) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ path('app_camion_c_r_u_d_edit', {'id': camion.id}) }}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="6" class="text-center">Aucun camion trouvé</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importForm = document.querySelector('#importModal form');
+    if (importForm) {
+        importForm.addEventListener('submit', function() {
+            const spinner = document.getElementById('importSpinner');
+            spinner.classList.remove('d-none');
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}ZoneDeCollecte index{% endblock %}
+
+{% block body %}
+
+    <h1>ZoneDeCollecte index</h1>
+
+    <div class="mb-4 d-flex justify-content-between">
+        <form action="" method="GET" class="d-flex gap-3">
+            <div class="form-group">
+                <input type="text" name="query" placeholder="Recherche par Nom..." 
+                       value="{{ app.request.query.get('query') }}" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <select name="tempsDeCollecte" class="form-control">
+                    <option value="">-- Temps de collecte --</option>
+                    {% for zone in zone_de_collectes %}
+                        {% if zone.tempsDeCollecte %}
+                            <option value="{{ zone.tempsDeCollecte|date('H:i') }}" 
+                                    {% if app.request.query.get('tempsDeCollecte') == zone.tempsDeCollecte|date('H:i') %} selected {% endif %}>
+                                {{ zone.tempsDeCollecte|date('H:i') }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+
+        <div class="btn-group">
+            <a href="{{ path('app_zone_de_collecte_export_csv') }}" class="btn btn-success">
+                <i class="fas fa-file-export"></i> Exporter CSV
+            </a>
+            
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import"></i> Importer CSV
+            </button>
+            
+            <a href="{{ path('app_zone_de_collecte_crud_new') }}" class="btn btn-warning">
+                <i class="fas fa-plus"></i> Nouvelle zone
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal d'import -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Importer des zones</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ path('app_zone_de_collecte_import_csv') }}" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">Fichier CSV</label>
+                            <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv" required>
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>Format attendu :</strong> Colonnes "Nom", "Population", "Temps de collecte"
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Importer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Nom</th>
+                <th>Population</th>
+                <th>Temps de collecte</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set query = app.request.query.get('query') %}
+        {% set tempsDeCollecte = app.request.query.get('tempsDeCollecte') %}
+        
+        {% set filteredZones = zone_de_collectes %}
+
+        {% if query %}
+            {% set filteredZones = filteredZones|filter(item => item.nom matches '/' ~ query ~ '/i') %}
+        {% endif %}
+        
+        {% if tempsDeCollecte %}
+            {% set filteredZones = filteredZones|filter(item => item.tempsDeCollecte|date('H:i') == tempsDeCollecte) %}
+        {% endif %}
+
+        {% for zone_de_collecte in filteredZones %}
+            <tr>
+                <td>{{ zone_de_collecte.nom }}</td>
+                <td>{{ zone_de_collecte.population }}</td>
+                <td>{{ zone_de_collecte.tempsDeCollecte ? zone_de_collecte.tempsDeCollecte|date('H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_zone_de_collecte_crud_show', {'id': zone_de_collecte.id}) }}" 
+                       class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ path('app_zone_de_collecte_crud_edit', {'id': zone_de_collecte.id}) }}" 
+                       class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" class="text-center">Aucune zone de collecte trouvée</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

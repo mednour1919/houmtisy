@@ -1,0 +1,11 @@
+
+
+{% block title %}New Camion{% endblock %}
+
+{% block body %}
+    <h1>Create new Camion</h1>
+
+    {{ include('camion_crud/_form.html.twig') }}
+
+    <a href="{{ path('app_camion_c_r_u_d_index') }}">back to list</a>
+{% endblock %}

@@ -1,0 +1,13 @@
+
+
+{% block title %}Edit Camion{% endblock %}
+
+{% block body %}
+    <h1>Edit Camion</h1>
+
+    {{ include('camion_crud/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_camion_c_r_u_d_index') }}">back to list</a>
+
+    {{ include('camion_crud/_delete_form.html.twig') }}
+{% endblock %}

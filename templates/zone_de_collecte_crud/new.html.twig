@@ -1,0 +1,11 @@
+
+
+{% block title %}New ZoneDeCollecte{% endblock %}
+
+{% block body %}
+    <h1>Create new ZoneDeCollecte</h1>
+
+    {{ include('zone_de_collecte_crud/_form.html.twig') }}
+
+    <a href="{{ path('app_zone_de_collecte_crud_index') }}">back to list</a>
+{% endblock %}
