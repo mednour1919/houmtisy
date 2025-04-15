@@ -13,6 +13,8 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\PositiveOrZero;
 
 class ProjetType extends AbstractType
 {
@@ -20,12 +22,11 @@ class ProjetType extends AbstractType
     {
         $builder
             ->add('nom', TextType::class, [
-                'attr' => [
-                    'placeholder' => 'Nom du projet',
-                    'class' => 'form-control'
+                'constraints' => [
+                    new NotBlank([
+                        'message' => 'Le nom du projet ne peut pas être vide.',
+                    ]),
                 ],
-                'label' => 'Nom du projet *',
-                'required' => true
             ])
             ->add('statut', ChoiceType::class, [
                 'choices' => [
@@ -37,19 +38,15 @@ class ProjetType extends AbstractType
                 ],
                 'placeholder' => 'Sélectionnez un statut',
                 'attr' => ['class' => 'form-select'],
-                'label' => 'Statut *',
-                'required' => true
+                'constraints' => [
+                    new NotBlank(['message' => 'Le statut est obligatoire.']),
+                ],
             ])
             ->add('budget', NumberType::class, [
-                'scale' => 2,
-                'html5' => true,
-                'attr' => [
-                    'step' => '0.01',
-                    'min' => '0',
-                    'placeholder' => '0.00',
-                    'class' => 'form-control'
+                'constraints' => [
+                    new NotBlank(['message' => 'Le budget est obligatoire.']),
+                    new PositiveOrZero(['message' => 'Le budget doit être positif ou nul.']),
                 ],
-                'label' => 'Budget (€) *'
             ])
             ->add('depense', NumberType::class, [
                 'scale' => 2,
@@ -65,23 +62,19 @@ class ProjetType extends AbstractType
             ])
             ->add('dateDebut', DateType::class, [
                 'widget' => 'single_text',
-                'attr' => ['class' => 'form-control'],
-                'label' => 'Date de début *',
-                'html5' => true
+                'constraints' => [
+                    new NotBlank(['message' => 'La date de début est obligatoire.']),
+                ],
             ])
             ->add('dateFin', DateType::class, [
                 'widget' => 'single_text',
-                'attr' => ['class' => 'form-control'],
-                'label' => 'Date de fin *',
-                'html5' => true
+                'constraints' => [
+                    new NotBlank(['message' => 'La date de fin est obligatoire.']),
+                ],
             ])
             ->add('description', TextareaType::class, [
                 'required' => false,
-                'attr' => [
-                    'rows' => 3,
-                    'class' => 'form-control',
-                    'placeholder' => 'Description du projet...'
-                ],
+                'attr' => ['rows' => 3, 'class' => 'form-control', 'placeholder' => 'Description du projet...'],
                 'label' => 'Description'
             ])
             ->add('fournisseur', EntityType::class, [

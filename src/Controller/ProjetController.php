@@ -9,12 +9,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/projet')]
 final class ProjetController extends AbstractController
 {
-    #[Route(name: 'app_projet_index', methods: ['GET'])]
+    // Affichage de la liste des projets
+    #[Route('/', name: 'app_projet_index', methods: ['GET'])]
     public function index(ProjetRepository $projetRepository): Response
     {
         return $this->render('projet/index.html.twig', [
@@ -22,7 +23,8 @@ final class ProjetController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'app_projet_new', methods: ['GET', 'POST'])]
+    // Création d'un nouveau projet
+    #[Route('/new', name: 'app_projet_new')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $projet = new Projet();
@@ -30,20 +32,28 @@ final class ProjetController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($projet->getDateDebut() === null) {
+                $projet->setDateDebut(new \DateTime());
+            }
+
+            if ($projet->getDateFin() === null) {
+                $projet->setDateFin(new \DateTime());
+            }
+
             $entityManager->persist($projet);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le projet a été créé avec succès.');
+            $this->addFlash('success', 'Le projet a été ajouté avec succès.');
 
-            return $this->redirectToRoute('app_projet_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_projet_index');
         }
 
         return $this->render('projet/new.html.twig', [
-            'projet' => $projet,
             'form' => $form->createView(),
         ]);
     }
 
+    // Affichage des détails d'un projet
     #[Route('/{id}', name: 'app_projet_show', methods: ['GET'])]
     public function show(Projet $projet): Response
     {
@@ -52,6 +62,7 @@ final class ProjetController extends AbstractController
         ]);
     }
 
+    // Modification d'un projet existant
     #[Route('/{id}/edit', name: 'app_projet_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
     {
@@ -63,7 +74,7 @@ final class ProjetController extends AbstractController
 
             $this->addFlash('success', 'Le projet a été mis à jour avec succès.');
 
-            return $this->redirectToRoute('app_projet_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_projet_index');
         }
 
         return $this->render('projet/edit.html.twig', [
@@ -72,16 +83,15 @@ final class ProjetController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_projet_delete', methods: ['POST'])]
+    // Suppression d'un projet
+    #[Route('/{id}', name: 'app_projet_delete', methods: ['DELETE'])]
     public function delete(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$projet->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $projet->getId(), $request->request->get('_token'))) {
             $entityManager->remove($projet);
             $entityManager->flush();
-            
-            $this->addFlash('success', 'Le projet a été supprimé avec succès.');
         }
 
-        return $this->redirectToRoute('app_projet_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_projet_index');
     }
 }

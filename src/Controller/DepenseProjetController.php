@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/depense/projet')]
 final class DepenseProjetController extends AbstractController
 {
-    #[Route(name: 'app_depense_projet_index', methods: ['GET'])]
+    #[Route('/', name: 'app_depense_projet_index', methods: ['GET'])]
     public function index(DepenseProjetRepository $depenseProjetRepository): Response
     {
         return $this->render('depense_projet/index.html.twig', [
@@ -30,13 +30,6 @@ final class DepenseProjetController extends AbstractController
         $form->handleRequest($request);
     
         if ($form->isSubmitted() && $form->isValid()) {
-            // Associer automatiquement la dépense au projet
-            $projet = $depenseProjet->getProjet();
-            if ($projet) {
-                $projet->addDepenseProjet($depenseProjet);
-                // Le montant sera mis à jour via la méthode addDepenseProjet
-            }
-            
             $entityManager->persist($depenseProjet);
             $entityManager->flush();
     
@@ -45,7 +38,7 @@ final class DepenseProjetController extends AbstractController
     
         return $this->render('depense_projet/new.html.twig', [
             'depense_projet' => $depenseProjet,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 
@@ -71,14 +64,14 @@ final class DepenseProjetController extends AbstractController
 
         return $this->render('depense_projet/edit.html.twig', [
             'depense_projet' => $depenseProjet,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 
     #[Route('/{id}', name: 'app_depense_projet_delete', methods: ['POST'])]
     public function delete(Request $request, DepenseProjet $depenseProjet, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$depenseProjet->getId(), $request->getPayload()->getString('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$depenseProjet->getId(), $request->getPayload()->get('_token'))) {
             $entityManager->remove($depenseProjet);
             $entityManager->flush();
         }

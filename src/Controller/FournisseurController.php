@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/fournisseur')]
 class FournisseurController extends AbstractController
@@ -29,11 +30,16 @@ class FournisseurController extends AbstractController
         $form = $this->createForm(FournisseurType::class, $fournisseur);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($fournisseur);
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                $entityManager->persist($fournisseur);
+                $entityManager->flush();
 
-            return $this->redirectToRoute('app_fournisseur_index', [], Response::HTTP_SEE_OTHER);
+                $this->addFlash('success', 'Fournisseur créé avec succès');
+                return $this->redirectToRoute('app_fournisseur_index');
+            } else {
+                $this->addFlash('error', 'Erreur dans le formulaire');
+            }
         }
 
         return $this->render('fournisseur/new.html.twig', [
@@ -56,10 +62,15 @@ class FournisseurController extends AbstractController
         $form = $this->createForm(FournisseurType::class, $fournisseur);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                $entityManager->flush();
 
-            return $this->redirectToRoute('app_fournisseur_index', [], Response::HTTP_SEE_OTHER);
+                $this->addFlash('success', 'Fournisseur mis à jour avec succès');
+                return $this->redirectToRoute('app_fournisseur_index');
+            } else {
+                $this->addFlash('error', 'Erreur dans le formulaire');
+            }
         }
 
         return $this->render('fournisseur/edit.html.twig', [
@@ -72,10 +83,17 @@ class FournisseurController extends AbstractController
     public function delete(Request $request, Fournisseur $fournisseur, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$fournisseur->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($fournisseur);
-            $entityManager->flush();
+            try {
+                $entityManager->remove($fournisseur);
+                $entityManager->flush();
+                $this->addFlash('success', 'Fournisseur supprimé avec succès');
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Impossible de supprimer ce fournisseur car il est associé à des projets');
+            }
+        } else {
+            $this->addFlash('error', 'Token CSRF invalide');
         }
 
-        return $this->redirectToRoute('app_fournisseur_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_fournisseur_index');
     }
 }

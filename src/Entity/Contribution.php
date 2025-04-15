@@ -2,12 +2,9 @@
 
 namespace App\Entity;
 
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-
 use App\Repository\ContributionRepository;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ContributionRepository::class)]
 #[ORM\Table(name: 'contribution')]
@@ -17,6 +14,44 @@ class Contribution
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: Projet::class, inversedBy: 'contributions')]
+    #[ORM\JoinColumn(name: 'projet_id', referencedColumnName: 'id')]
+    #[Assert\NotNull(message: "Le projet est obligatoire")]
+    private ?Projet $projet = null;
+
+    #[ORM\Column(type: 'text', nullable: false)]
+    #[Assert\NotBlank(message: "Le message ne peut pas être vide")]
+    #[Assert\Length(
+        min: 10,
+        max: 1000,
+        minMessage: "Le message doit contenir au moins {{ limit }} caractères",
+        maxMessage: "Le message ne peut pas dépasser {{ limit }} caractères"
+    )]
+    private ?string $message = null;
+
+    #[ORM\Column(
+        type: 'string',
+        columnDefinition: "ENUM('idée', 'signalement', 'feedback') NOT NULL"
+    )]
+    #[Assert\NotBlank(message: "Le type est obligatoire")]
+    #[Assert\Choice(
+        choices: ['idée', 'signalement', 'feedback'],
+        message: "Choisissez un type valide"
+    )]
+    private ?string $type = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'date_creation')]
+    private ?\DateTimeInterface $dateCreation = null;
+
+    #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\Choice(
+        choices: ['en_attente', 'validé', 'rejeté'],
+        message: "Statut invalide"
+    )]
+    private ?string $statut = null;
+
+    // Getters / Setters
 
     public function getId(): ?int
     {
@@ -29,10 +64,6 @@ class Contribution
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Projet::class, inversedBy: 'contributions')]
-    #[ORM\JoinColumn(name: 'projet_id', referencedColumnName: 'id')]
-    private ?Projet $projet = null;
-
     public function getProjet(): ?Projet
     {
         return $this->projet;
@@ -43,9 +74,6 @@ class Contribution
         $this->projet = $projet;
         return $this;
     }
-
-    #[ORM\Column(type: 'text', nullable: false)]
-    private ?string $message = null;
 
     public function getMessage(): ?string
     {
@@ -58,12 +86,6 @@ class Contribution
         return $this;
     }
 
-    #[ORM\Column(
-        type: 'string',
-        columnDefinition: "ENUM('idée', 'signalement', 'feedback') NOT NULL"
-    )]
-    private ?string $type = null;
-
     public function getType(): ?string
     {
         return $this->type;
@@ -75,22 +97,16 @@ class Contribution
         return $this;
     }
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
-    private ?\DateTimeInterface $date_creation = null;
-
-    public function getDate_creation(): ?\DateTimeInterface
+    public function getDateCreation(): ?\DateTimeInterface
     {
-        return $this->date_creation;
+        return $this->dateCreation;
     }
 
-    public function setDate_creation(?\DateTimeInterface $date_creation): self
+    public function setDateCreation(?\DateTimeInterface $dateCreation): self
     {
-        $this->date_creation = $date_creation;
+        $this->dateCreation = $dateCreation;
         return $this;
     }
-
-    #[ORM\Column(type: 'string', nullable: true)]
-    private ?string $statut = null;
 
     public function getStatut(): ?string
     {
@@ -102,17 +118,4 @@ class Contribution
         $this->statut = $statut;
         return $this;
     }
-
-    public function getDateCreation(): ?\DateTimeInterface
-    {
-        return $this->date_creation;
-    }
-
-    public function setDateCreation(?\DateTimeInterface $date_creation): static
-    {
-        $this->date_creation = $date_creation;
-
-        return $this;
-    }
-
 }

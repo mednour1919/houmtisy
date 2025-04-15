@@ -10,11 +10,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/contribution')]
-final class ContributionController extends AbstractController
+class ContributionController extends AbstractController
 {
-    #[Route(name: 'app_contribution_index', methods: ['GET'])]
+    #[Route('/', name: 'app_contribution_index', methods: ['GET'])]
     public function index(ContributionRepository $contributionRepository): Response
     {
         return $this->render('contribution/index.html.twig', [
@@ -29,11 +30,26 @@ final class ContributionController extends AbstractController
         $form = $this->createForm(ContributionType::class, $contribution);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($contribution);
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                // Définir la date de création si non renseignée
+                if (!$contribution->getDateCreation()) {
+                    $contribution->setDateCreation(new \DateTime());
+                }
 
-            return $this->redirectToRoute('app_contribution_index', [], Response::HTTP_SEE_OTHER);
+                // Définir le statut par défaut si non renseigné
+                if (!$contribution->getStatut()) {
+                    $contribution->setStatut('en_attente');
+                }
+
+                $entityManager->persist($contribution);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Contribution créée avec succès');
+                return $this->redirectToRoute('app_contribution_index');
+            } else {
+                $this->addFlash('error', 'Erreur dans le formulaire');
+            }
         }
 
         return $this->render('contribution/new.html.twig', [
@@ -56,10 +72,15 @@ final class ContributionController extends AbstractController
         $form = $this->createForm(ContributionType::class, $contribution);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                $entityManager->flush();
 
-            return $this->redirectToRoute('app_contribution_index', [], Response::HTTP_SEE_OTHER);
+                $this->addFlash('success', 'Contribution mise à jour avec succès');
+                return $this->redirectToRoute('app_contribution_index');
+            } else {
+                $this->addFlash('error', 'Erreur dans le formulaire');
+            }
         }
 
         return $this->render('contribution/edit.html.twig', [
@@ -71,11 +92,14 @@ final class ContributionController extends AbstractController
     #[Route('/{id}', name: 'app_contribution_delete', methods: ['POST'])]
     public function delete(Request $request, Contribution $contribution, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$contribution->getId(), $request->getPayload()->getString('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$contribution->getId(), $request->getPayload()->get('_token'))) {
             $entityManager->remove($contribution);
             $entityManager->flush();
+            $this->addFlash('success', 'Contribution supprimée avec succès');
+        } else {
+            $this->addFlash('error', 'Token CSRF invalide');
         }
 
-        return $this->redirectToRoute('app_contribution_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_contribution_index');
     }
 }

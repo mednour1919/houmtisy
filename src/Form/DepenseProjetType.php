@@ -8,33 +8,44 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Form\Extension\Core\Type\NumberType; // Corrected the namespace
-use App\Form\FloatToStringTransformer;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Positive;
 
 class DepenseProjetType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('montant', NumberType::class, [
-                'label' => 'Montant (€)',
-                'attr' => [
-                    'step' => '0.01',
-                    'min' => '0',
-                    'placeholder' => '0.00',
-                ],
-                'html5' => true,
-                'scale' => 2,
-                'required' => true,
-                'input' => 'string', // Ajoutez cette ligne
-            ])
-            ->add('description')
-            ->add('date_depense', null, [
-                'widget' => 'single_text',
-            ])
             ->add('projet', EntityType::class, [
                 'class' => Projet::class,
-                'choice_label' => 'id',
+                'choice_label' => 'nom',
+                'attr' => ['class' => 'form-select'],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le projet est obligatoire']),
+                ],
+            ])
+            ->add('montant', NumberType::class, [
+                'scale' => 2,
+                'attr' => ['class' => 'form-control'],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le montant est obligatoire']),
+                    new Positive(['message' => 'Le montant doit être positif']),
+                ],
+            ])
+            ->add('description', TextareaType::class, [
+                'required' => false,
+                'attr' => [
+                    'rows' => 3,
+                    'class' => 'form-control',
+                ],
+            ])
+            ->add('dateDepense', DateType::class, [
+                'widget' => 'single_text',
+                'attr' => ['class' => 'form-control'],
+                'required' => false,
             ]);
     }
 

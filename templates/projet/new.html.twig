@@ -6,6 +6,12 @@
     <div class="container mt-4">
         <h1 class="mb-4">Créer un nouveau projet</h1>
 
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+
         <div class="card shadow">
             <div class="card-body">
                 {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
