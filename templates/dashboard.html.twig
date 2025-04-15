@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord{% endblock %}
+
+{% block page_title %}Tableau de Bord{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <!-- Column -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card card-hover">
+            <div class="box bg-cyan text-center">
+                <h1 class="font-light text-white">{{ signalements_count }}</h1>
+                <h6 class="text-white">Signalements</h6>
+            </div>
+        </div>
+    </div>
+    <!-- Column -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card card-hover">
+            <div class="box bg-success text-center">
+                <h1 class="font-light text-white">{{ reponses_count }}</h1>
+                <h6 class="text-white">Réponses</h6>
+            </div>
+        </div>
+    </div>
+    <!-- Column -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card card-hover">
+            <div class="box bg-warning text-center">
+                <h1 class="font-light text-white">{{ users_count }}</h1>
+                <h6 class="text-white">Utilisateurs</h6>
+            </div>
+        </div>
+    </div>
+    <!-- Column -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card card-hover">
+            <div class="box bg-danger text-center">
+                <h1 class="font-light text-white">{{ unresolved_count }}</h1>
+                <h6 class="text-white">Non résolus</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Derniers Signalements</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for signalement in recent_signalements %}
+                            <tr>
+                                <td>{{ signalement.id }}</td>
+                                <td>{{ signalement.type }}</td>
+                                <td>{{ signalement.date|date('d/m/Y H:i') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ signalement.statut == 'Résolu' ? 'success' : 'warning' }}">
+                                        {{ signalement.statut }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    $(function() {
+        // Scripts spécifiques à la page dashboard
+    });
+</script>
+{% endblock %}
