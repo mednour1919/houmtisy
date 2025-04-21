@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camions</title>
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Liste des Camions</h1>
+    </header>
+
+    <section class="camions">
+        {% if camions is empty %}
+            <p>Aucun camion disponible.</p>
+        {% else %}
+            <ul>
+                {% for camion in camions %}
+                    <li>
+                        <h2>{{ camion.nom }}</h2>
+                        <p>Marque : {{ camion.marque }}</p>
+                        <p>Modèle : {{ camion.modele }}</p>
+                        <p>Capacité : {{ camion.capacite }} tonnes</p>
+                        <p>
+                            <img src="{{ asset('uploads/' ~ camion.image) }}" alt="Image de {{ camion.nom }}" width="200">
+                        </p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Tous droits réservés</p>
+    </footer>
+</body>
+</html>
+

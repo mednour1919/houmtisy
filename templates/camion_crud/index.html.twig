@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Camion index{% endblock %}
+
+{% block body %}
+    <h1>Liste des Camions</h1>
+
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <!-- Formulaire de recherche -->
+        <form action="" method="GET" class="d-flex gap-2">
+            <input type="text" name="query" placeholder="Recherche..." 
+                   value="{{ app.request.query.get('query') }}" class="form-control">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+
+        <!-- Boutons d'actions -->
+        <div class="btn-group gap-2">
+            <!-- Bouton Export Excel -->
+            <a href="{{ path('app_camion_export') }}" class="btn btn-success">Exporter Excel</a>
+
+            <!-- Bouton Import Excel -->
+            <form method="post" action="{{ path('app_camion_import') }}" enctype="multipart/form-data" class="d-inline">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('file-input').click()">Importer Excel</button>
+                <input type="file" id="file-input" name="excel_file" style="display: none;" onchange="this.form.submit()" accept=".xlsx,.xls">
+            </form>
+
+            <a href="{{ path('app_camion_c_r_u_d_new') }}" class="btn btn-warning">Nouveau camion</a>
+        </div>
+    </div>
+
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>Capacity</th>
+                <th>Image</th>
+                <th>Nom</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set query = app.request.query.get('query') %}
+        {% set filteredCamions = camions %}
+
+        {% if query %}
+            {% set filteredCamions = camions|filter(item => 
+                item.nom matches '/' ~ query ~ '/i' or 
+                item.type matches '/' ~ query ~ '/i' or 
+                item.statut matches '/' ~ query ~ '/i'
+            ) %}
+        {% endif %}
+
+        {% for camion in filteredCamions %}
+            <tr>
+                <td>{{ camion.type }}</td>
+                <td>{{ camion.statut }}</td>
+                <td>{{ camion.capacity }}</td>
+                <td>
+                    {% if camion.image %}
+                        <img src="/uploads/{{ camion.image }}" width="100" style="max-height: 80px; object-fit: cover;">
+                    {% else %}
+                        <span class="text-muted">Aucune image</span>
+                    {% endif %}
+                </td>
+                <td>{{ camion.nom }}</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{{ path('app_camion_c_r_u_d_show', {'id': camion.id}) }}" class="btn btn-sm btn-primary">Consulter</a>
+                        <a href="{{ path('app_camion_c_r_u_d_edit', {'id': camion.id}) }}" class="btn btn-sm btn-warning">Modifier</a>
+                        <form method="post" action="{{ path('app_camion_c_r_u_d_delete', {'id': camion.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce camion ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ camion.id) }}">
+                            <button class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="6" class="text-center">Aucun camion trouvé</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

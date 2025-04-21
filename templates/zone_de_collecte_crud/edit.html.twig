@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Zone de Collecte - {{ zone_de_collecte.nom }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4">
+    <div class="row">
+        <div class="col-md-10 mx-auto mt-4">
+            <!-- En-tête de page -->
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Modifier la zone de collecte</h1>
+                    <p class="text-muted mb-0">Mettez à jour les informations relatives à cette zone</p>
+                </div>
+                <a href="{{ path('app_zone_de_collecte_crud_index') }}" class="btn btn-outline-secondary rounded-pill shadow-sm px-4">
+                    Retour à la liste
+                </a>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow rounded-4 border-0 mb-4">
+                <div class="card-header bg-transparent border-bottom-0 py-4">
+                    <h5 class="mb-0 text-primary">
+                        Modifier les détails de la zone
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    {{ include('zone_de_collecte_crud/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+                </div>
+            </div>
+
+            <!-- Section suppression -->
+            <div class="card shadow rounded-4 border-0">
+                <div class="card-header bg-transparent border-bottom-0 py-4">
+                    <h5 class="mb-0 text-danger">
+                        Suppression de la zone
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="alert alert-warning rounded-4 shadow-sm mb-4">
+                        <p class="mb-0">Attention : cette action est irréversible. Toutes les données associées seront définitivement perdues.</p>
+                    </div>
+                    {{ include('zone_de_collecte_crud/_delete_form.html.twig') }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

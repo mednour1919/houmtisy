@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails du camion - {{ camion.nom }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom-0">
+            <h1 class="h3 mb-0">Détails du camion</h1>
+            <p class="text-muted mb-0">Informations complètes sur le véhicule</p>
+        </div>
+        
+        <div class="card-body">
+            <table class="table table-hover">
+                <tbody>
+                    <tr>
+                        <th class="w-25">Identifiant</th>
+                        <td>{{ camion.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Type</th>
+                        <td>{{ camion.type }}</td>
+                    </tr>
+                    <tr>
+                        <th>Statut</th>
+                        <td>
+                            <span class="badge bg-{{ camion.statut == 'Disponible' ? 'success' : 'warning' }}">
+                                {{ camion.statut }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Capacité</th>
+                        <td>{{ camion.capacity }} tonnes</td>
+                    </tr>
+                    <tr>
+                        <th>Nom</th>
+                        <td><strong>{{ camion.nom }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Image</th>
+                        <td>
+                            {% if camion.image %}
+                                <img src="/uploads/{{ camion.image }}" class="img-thumbnail" width="200" alt="Image du camion {{ camion.nom }}">
+                            {% else %}
+                                <span class="text-muted">Aucune image disponible</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+            <a href="{{ path('app_camion_c_r_u_d_index') }}" class="btn btn-outline-secondary">
+                Retour à la liste
+            </a>
+            
+            <div class="btn-group">
+                <a href="{{ path('app_camion_c_r_u_d_edit', {'id': camion.id}) }}" class="btn btn-primary px-4">
+                    Modifier
+                </a>
+                {{ include('camion_crud/_delete_form.html.twig') }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

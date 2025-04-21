@@ -1,0 +1,31 @@
+{% block title %}Détails de la Zone de Collecte{% endblock %}
+
+{% block body %}
+    <h1>Détails de la Zone de Collecte</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Identifiant</th>
+                <td>{{ zone_de_collecte.id }}</td>
+            </tr>
+            <tr>
+                <th>Nom</th>
+                <td>{{ zone_de_collecte.nom }}</td>
+            </tr>
+            <tr>
+                <th>Population</th>
+                <td>{{ zone_de_collecte.population }}</td>
+            </tr>
+            <tr>
+                <th>Temps de collecte</th>
+                <td>{{ zone_de_collecte.tempsDeCollecte ? zone_de_collecte.tempsDeCollecte|date('H:i:s') : 'Non défini' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_zone_de_collecte_crud_index') }}" class="btn btn-secondary me-2">Retour à la liste</a>
+    <a href="{{ path('app_zone_de_collecte_crud_edit', {'id': zone_de_collecte.id}) }}" class="btn btn-primary">Modifier</a>
+
+    {{ include('zone_de_collecte_crud/_delete_form.html.twig') }}
+{% endblock %}
