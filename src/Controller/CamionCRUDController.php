@@ -9,36 +9,61 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
-use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
-use ZipArchive;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/camioncl')]
 final class CamionCRUDController extends AbstractController
 {
     #[Route(name: 'app_camion_c_r_u_d_index', methods: ['GET'])]
-    public function index(CamionRepository $camionRepository): Response
+    public function index(CamionRepository $repository, Request $request): Response
     {
+        $searchTerm = $request->query->get('q');
+        
+        $query = $repository->createQueryBuilder('c');
+        
+        if ($searchTerm) {
+            $query->where('c.nom LIKE :term OR c.type LIKE :term OR c.statut LIKE :term')
+                  ->setParameter('term', '%'.$searchTerm.'%');
+        }
+
+        $camions = $query->getQuery()->getResult();
+
+        if ($request->isXmlHttpRequest()) {
+            $camionsArray = array_map(function($camion) {
+                return [
+                    'id' => $camion->getId(),
+                    'nom' => $camion->getNom(),
+                    'type' => $camion->getType(),
+                    'statut' => $camion->getStatut(),
+                    'capacity' => $camion->getCapacity(),
+                    'image' => $camion->getImage(),
+                ];
+            }, $camions);
+            
+            return new JsonResponse(['camions' => $camionsArray]);
+        }
+
         return $this->render('camion_crud/index.html.twig', [
-            'camions' => $camionRepository->findAll(),
-            'uploads_directory' => $this->getParameter('uploads_directory'),
+            'camions' => $camions,
+            'search_term' => $searchTerm,
         ]);
     }
 
     #[Route('/export', name: 'app_camion_export', methods: ['GET'])]
-    public function exportToExcel(CamionRepository $camionRepository): BinaryFileResponse
+    public function exportToExcel(CamionRepository $repository): BinaryFileResponse
     {
-        $camions = $camionRepository->findAll();
+        $camions = $repository->findAll();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-
 
         $sheet->setCellValue('A1', 'ID');
         $sheet->setCellValue('B1', 'Type');
@@ -47,25 +72,22 @@ final class CamionCRUDController extends AbstractController
         $sheet->setCellValue('E1', 'Nom');
         $sheet->setCellValue('F1', 'Image');
 
-        // Données
         $row = 2;
         foreach ($camions as $camion) {
-            $sheet->setCellValue('A' . $row, $camion->getId());
-            $sheet->setCellValue('B' . $row, $camion->getType());
-            $sheet->setCellValue('C' . $row, $camion->getStatut());
-            $sheet->setCellValue('D' . $row, $camion->getCapacity());
-            $sheet->setCellValue('E' . $row, $camion->getNom());
-            $sheet->setCellValue('F' . $row, $camion->getImage());
+            $sheet->setCellValue('A'.$row, $camion->getId());
+            $sheet->setCellValue('B'.$row, $camion->getType());
+            $sheet->setCellValue('C'.$row, $camion->getStatut());
+            $sheet->setCellValue('D'.$row, $camion->getCapacity());
+            $sheet->setCellValue('E'.$row, $camion->getNom());
+            $sheet->setCellValue('F'.$row, $camion->getImage());
             $row++;
         }
 
-        // Création du fichier temporaire
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'camions_export_' . date('Y-m-d') . '.xlsx';
+        $fileName = 'camions_export_'.date('Y-m-d').'.xlsx';
         $tempFile = tempnam(sys_get_temp_dir(), $fileName);
         $writer->save($tempFile);
 
-        // Réponse de téléchargement
         $response = new BinaryFileResponse($tempFile);
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
@@ -86,13 +108,12 @@ final class CamionCRUDController extends AbstractController
             $sheet = $spreadsheet->getActiveSheet();
     
             $rows = $sheet->toArray();
-            array_shift($rows); // Supprimer l'en-tête
+            array_shift($rows);
     
             $importedCount = 0;
             $skippedCount = 0;
     
             foreach ($rows as $row) {
-                // Vérifier si un camion existe déjà avec les mêmes caractéristiques
                 $existingCamion = $camionRepository->findOneBy([
                     'type' => $row[1] ?? '',
                     'nom' => $row[4] ?? '',
@@ -232,5 +253,29 @@ final class CamionCRUDController extends AbstractController
         }
 
         return $this->redirectToRoute('app_camion_c_r_u_d_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/api/search', name: 'app_camion_search', methods: ['GET'])]
+    public function search(CamionRepository $repository, Request $request): JsonResponse
+    {
+        $term = $request->query->get('term', '');
+        
+        $camions = $repository->createQueryBuilder('c')
+            ->where('c.nom LIKE :term OR c.type LIKE :term OR c.statut LIKE :term')
+            ->setParameter('term', '%'.$term.'%')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+        
+        $results = array_map(function($camion) {
+            return [
+                'id' => $camion->getId(),
+                'text' => $camion->getNom(),
+                'type' => $camion->getType(),
+                'statut' => $camion->getStatut()
+            ];
+        }, $camions);
+        
+        return $this->json(['results' => $results]);
     }
 }
