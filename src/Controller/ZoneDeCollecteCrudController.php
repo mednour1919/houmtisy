@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
@@ -22,27 +23,69 @@ final class ZoneDeCollecteCrudController extends AbstractController
     #[Route(name: 'app_zone_de_collecte_crud_index', methods: ['GET'])]
     public function index(ZoneDeCollecteRepository $repository, Request $request): Response
     {
-        $searchTerm = $request->query->get('q');
-        $searchTime = $request->query->get('time');
+        // Configuration des champs de recherche disponibles
+        $searchableFields = [
+            'nom' => [
+                'operator' => 'LIKE',
+                'param_transform' => fn($value) => '%'.$value.'%',
+                'query_param' => 'q'
+            ],
+            'temps_de_collecte' => [
+                'operator' => '=',
+                'query_param' => 'time'
+            ],
+            'population' => [
+                'operator' => '=',
+                'type' => 'number'
+            ],
+        ];
 
         $query = $repository->createQueryBuilder('z');
-        
-        if ($searchTerm) {
-            $query->andWhere('z.nom LIKE :term')
-                  ->setParameter('term', '%'.$searchTerm.'%');
-        }
-        
-        if ($searchTime) {
-            $query->andWhere('z.temps_de_collecte = :time')
-                  ->setParameter('time', $searchTime);
+        $searchParameters = [];
+        $searchTerm = null;
+        $searchTime = null;
+
+        foreach ($searchableFields as $field => $options) {
+            $paramName = $options['query_param'] ?? $field;
+            $searchValue = $request->query->get($paramName);
+            
+            if ($searchValue !== null && $searchValue !== '') {
+                $paramKey = ':'.$field;
+                $transformedValue = isset($options['param_transform']) 
+                    ? $options['param_transform']($searchValue) 
+                    : $searchValue;
+                
+                $query->andWhere("z.{$field} {$options['operator']} {$paramKey}")
+                      ->setParameter($field, $transformedValue);
+                
+                $searchParameters[$field] = $searchValue;
+                
+                if ($paramName === 'q') $searchTerm = $searchValue;
+                if ($paramName === 'time') $searchTime = $searchValue;
+            }
         }
 
         $zones = $query->getQuery()->getResult();
 
+        if ($request->isXmlHttpRequest()) {
+            $zonesArray = array_map(function($zone) {
+                return [
+                    'id' => $zone->getId(),
+                    'nom' => $zone->getNom(),
+                    'population' => $zone->getPopulation(),
+                    'tempsDeCollecte' => $zone->getTempsDeCollecte() ? $zone->getTempsDeCollecte()->format('H:i') : null,
+                ];
+            }, $zones);
+            
+            return new JsonResponse(['zones' => $zonesArray]);
+        }
+
         return $this->render('zone_de_collecte_crud/index.html.twig', [
             'zone_de_collectes' => $zones,
+            'search_parameters' => $searchParameters,
             'search_term' => $searchTerm,
-            'search_time' => $searchTime
+            'search_time' => $searchTime,
+            'searchable_fields' => $searchableFields
         ]);
     }
 
@@ -95,7 +138,7 @@ final class ZoneDeCollecteCrudController extends AbstractController
             $sheet = $spreadsheet->getActiveSheet();
             
             $rows = $sheet->toArray();
-            array_shift($rows); // Remove header
+            array_shift($rows);
             
             $imported = 0;
             $skipped = 0;
@@ -183,5 +226,27 @@ final class ZoneDeCollecteCrudController extends AbstractController
         }
 
         return $this->redirectToRoute('app_zone_de_collecte_crud_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/api/search', name: 'app_zone_de_collecte_search', methods: ['GET'])]
+    public function search(ZoneDeCollecteRepository $repository, Request $request): JsonResponse
+    {
+        $term = $request->query->get('term', '');
+        
+        $zones = $repository->createQueryBuilder('z')
+            ->where('z.nom LIKE :term')
+            ->setParameter('term', '%'.$term.'%')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+        
+        $results = array_map(function($zone) {
+            return [
+                'id' => $zone->getId(),
+                'text' => $zone->getNom()
+            ];
+        }, $zones);
+        
+        return $this->json(['results' => $results]);
     }
 }

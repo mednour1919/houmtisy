@@ -39,7 +39,7 @@ final class CamionCRUDController extends AbstractController
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // En-têtes
+
         $sheet->setCellValue('A1', 'ID');
         $sheet->setCellValue('B1', 'Type');
         $sheet->setCellValue('C1', 'Statut');
