@@ -256,6 +256,8 @@ final class CamionCRUDController extends AbstractController
     }
 
     #[Route('/api/search', name: 'app_camion_search', methods: ['GET'])]
+
+
     public function search(CamionRepository $repository, Request $request): JsonResponse
     {
         $term = $request->query->get('term', '');
@@ -278,4 +280,5 @@ final class CamionCRUDController extends AbstractController
         
         return $this->json(['results' => $results]);
     }
+    
 }
