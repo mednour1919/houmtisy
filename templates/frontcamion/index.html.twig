@@ -1,0 +1,158 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des camions{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('input[name="q"]');
+            const tableBody = document.querySelector('table tbody');
+            let timeout;
+
+            function updateResults() {
+                const params = new URLSearchParams();
+                if (searchInput.value) params.append('q', searchInput.value);
+
+                fetch('{{ path('front_camion_index') }}?' + params.toString(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    tableBody.innerHTML = '';
+                    if (data.camions.length > 0) {
+                        data.camions.forEach(camion => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="ps-4"><strong>${camion.nom}</strong></td>
+                                <td>${camion.type}</td>
+                                <td><span class="badge bg-primary rounded-pill px-3 py-1">${camion.statut}</span></td>
+                                <td>${camion.capacity || '<span class="text-muted">Non défini</span>'}</td>
+                                <td>
+                                    ${camion.image ? 
+                                        `<img src="/uploads/${camion.image}" width="100" style="max-height: 80px; object-fit: cover;">` : 
+                                        '<span class="text-muted">Aucune image</span>'}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/camions/${camion.id}" class="btn btn-outline-info px-3">Détails</a>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td colspan="6" class="text-center py-5">
+                                <div class="py-4">
+                                    <p class="text-muted mb-3">Aucun camion trouvé</p>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    }
+                });
+            }
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(updateResults, 300);
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h1 class="h2 mb-2">Liste des camions</h1>
+            <p class="text-muted mb-0">Consultation des camions disponibles</p>
+        </div>
+        
+        <div class="d-flex flex-column flex-md-row gap-3 w-100 w-md-auto">
+            <form method="get" class="d-flex flex-column flex-md-row gap-2 flex-grow-1">
+                <input type="text" name="q" value="{{ search_term }}" 
+                       placeholder="Rechercher (nom, type ou statut)" 
+                       class="form-control">
+            </form>
+
+            <div class="d-flex flex-column flex-md-row gap-2">
+                <a href="{{ path('front_camion_export') }}" class="btn btn-success px-4">Exporter</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="mb-0">Camions disponibles</h5>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 20%">Nom</th>
+                            <th style="width: 15%">Type</th>
+                            <th style="width: 15%">Statut</th>
+                            <th style="width: 10%">Capacité</th>
+                            <th style="width: 20%">Image</th>
+                            <th class="text-end pe-4" style="width: 20%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for camion in camions %}
+                            <tr>
+                                <td class="ps-4">
+                                    <strong>{{ camion.nom }}</strong>
+                                </td>
+                                <td>{{ camion.type }}</td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill px-3 py-1">
+                                        {{ camion.statut }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if camion.capacity %}
+                                        {{ camion.capacity }}
+                                    {% else %}
+                                        <span class="text-muted">Non défini</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if camion.image %}
+                                        <img src="{{ asset('uploads/' ~ camion.image) }}" width="100" style="max-height: 80px; object-fit: cover;">
+                                    {% else %}
+                                        <span class="text-muted">Aucune image</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="{{ path('front_camion_show', {'id': camion.id}) }}" 
+                                       class="btn btn-outline-info px-3">Détails</a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="py-4">
+                                        <p class="text-muted mb-3">Aucun camion trouvé</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# AJOUTE LA PAGINATION EN BAS #}
+        {% if camions is not empty %}
+            <div class="d-flex justify-content-center p-4">
+                {{ knp_pagination_render(camions) }}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

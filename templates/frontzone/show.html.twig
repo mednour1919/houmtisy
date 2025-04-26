@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la Zone de Collecte - {{ zone.nom }}{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Détails de la zone : {{ zone.nom }}</h1>
+    
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Population :</strong> 
+                        <span class="badge bg-primary">
+                            {{ zone.population }} habitants
+                        </span>
+                    </p>
+                    <p><strong>Temps de collecte :</strong> 
+                        {% if zone.tempsDeCollecte %}
+                            {{ zone.tempsDeCollecte|date('H:i') }}
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6 text-center">
+    <h4>QR Code</h4>
+    <img src="{{ path('front_zone_qr_code', {'id': zone.id}) }}?v={{ date().timestamp }}" 
+         alt="QR Code {{ zone.nom }}"
+         class="img-fluid"
+         style="width:150px; height:150px; object-fit:contain;">
+    <p class="text-muted mt-2">Scannez-moi</p>
+</div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{{ path('front_zone_index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
