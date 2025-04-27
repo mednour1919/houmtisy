@@ -188,11 +188,11 @@ final class ZoneDeCollecteCrudController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             
             $twilio = new Client(
-                'ACec96f0bb88a211167535857a14abb0e2', 
-                'e85b72fd960d0121f02616078aa53549'    
+                '', 
+                ''    
             );
             
-            $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
+            $verifyServiceSid = '';
             $fromNumber = '+17067024124';
             $receiverNumber = $this->formatPhoneNumber('92636109');
 
@@ -239,11 +239,11 @@ final class ZoneDeCollecteCrudController extends AbstractController
 
             
             $twilio = new Client(
-                'ACec96f0bb88a211167535857a14abb0e2', 
-                'e85b72fd960d0121f02616078aa53549'    
+                '', 
+                ''    
             );
             
-            $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
+            $verifyServiceSid = '';
 
             try {
                 $verificationCheck = $twilio->verify->v2->services($verifyServiceSid)
