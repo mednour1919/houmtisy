@@ -6,7 +6,7 @@ use App\Entity\ZoneDeCollecte;
 use App\Form\ZoneDeCollecteType;
 use App\Repository\ZoneDeCollecteRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Knp\Component\Pager\PaginatorInterface; // Ajout de l'import pour la pagination
+use Knp\Component\Pager\PaginatorInterface; 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -68,7 +68,6 @@ final class ZoneDeCollecteCrudController extends AbstractController
             }
         }
 
-        // Modification unique pour ajouter la pagination
         $zones = $paginator->paginate(
             $query->getQuery(),
             $request->query->getInt('page', 1),
@@ -97,7 +96,7 @@ final class ZoneDeCollecteCrudController extends AbstractController
         ]);
     }
 
-    // Toutes les autres méthodes restent inchangées ci-dessous...
+
     #[Route('/export', name: 'app_zone_export', methods: ['GET'])]
     public function exportToExcel(ZoneDeCollecteRepository $repository): BinaryFileResponse
     {
@@ -178,6 +177,7 @@ final class ZoneDeCollecteCrudController extends AbstractController
         return $this->redirectToRoute('app_zone_de_collecte_crud_index');
     }
 
+
     #[Route('/new', name: 'app_zone_de_collecte_crud_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -186,10 +186,10 @@ final class ZoneDeCollecteCrudController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Configuration Twilio directe
+            
             $twilio = new Client(
-                'ACec96f0bb88a211167535857a14abb0e2', // Account SID
-                'e85b72fd960d0121f02616078aa53549'    // Auth Token
+                'ACec96f0bb88a211167535857a14abb0e2', 
+                'e85b72fd960d0121f02616078aa53549'    
             );
             
             $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
@@ -197,7 +197,7 @@ final class ZoneDeCollecteCrudController extends AbstractController
             $receiverNumber = $this->formatPhoneNumber('92636109');
 
             try {
-                // Envoi du code de vérification
+                
                 $verification = $twilio->verify->v2->services($verifyServiceSid)
                     ->verifications
                     ->create($receiverNumber, "sms");
@@ -237,10 +237,10 @@ final class ZoneDeCollecteCrudController extends AbstractController
                 return $this->render('zone_de_collecte_crud/verify.html.twig');
             }
 
-            // Configuration Twilio directe
+            
             $twilio = new Client(
-                'ACec96f0bb88a211167535857a14abb0e2', // Account SID
-                'e85b72fd960d0121f02616078aa53549'    // Auth Token
+                'ACec96f0bb88a211167535857a14abb0e2', 
+                'e85b72fd960d0121f02616078aa53549'    
             );
             
             $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
@@ -257,7 +257,7 @@ final class ZoneDeCollecteCrudController extends AbstractController
                     $entityManager->persist($zoneDeCollecte);
                     $entityManager->flush();
 
-                    // Envoi de confirmation
+                    
                     $twilio->messages->create(
                         $this->formatPhoneNumber('92636109'),
                         [

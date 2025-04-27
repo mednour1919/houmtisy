@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 #[Route('/camions')]
 final class CamionFrontController extends AbstractController
@@ -29,14 +31,14 @@ final class CamionFrontController extends AbstractController
                   ->setParameter('term', '%'.$searchTerm.'%');
         }
 
-        // Pagination des résultats (10 éléments par page)
+        
         $camions = $paginator->paginate(
             $query->getQuery(),
             $request->query->getInt('page', 1),
             8
         );
 
-        // Réponse AJAX pour la recherche en temps réel
+        
         if ($request->isXmlHttpRequest()) {
             $camionsArray = array_map(function($camion) {
                 return [
@@ -60,27 +62,41 @@ final class CamionFrontController extends AbstractController
     #[Route('/export', name: 'front_camion_export', methods: ['GET'])]
     public function exportToExcel(CamionRepository $repository): BinaryFileResponse
     {
-        $camionsData = $repository->findAllForExport();
-
+        $camions = $repository->findAll();
+    
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-
-        // En-têtes
-        $sheet->fromArray(
-            ['Type', 'Statut', 'Capacité', 'Nom', 'Image'],
-            null,
-            'A1'
-        );
-
-        // Données
-        $sheet->fromArray($camionsData, null, 'A2');
-
-        // Génération du fichier
+    
+        
+        $sheet->setCellValue('A1', 'Type');
+        $sheet->setCellValue('B1', 'Statut');
+        $sheet->setCellValue('C1', 'Capacité');
+        $sheet->setCellValue('D1', 'Nom');
+        $sheet->setCellValue('E1', 'Image');
+    
+        
+        $row = 2;
+        foreach ($camions as $camion) {
+            $sheet->setCellValue('A'.$row, $camion->getType());
+            $sheet->setCellValue('B'.$row, $camion->getStatut());
+            $sheet->setCellValue('C'.$row, $camion->getCapacity());
+            $sheet->setCellValue('D'.$row, $camion->getNom());
+            $sheet->setCellValue('E'.$row, $camion->getImage());
+            $row++;
+        }
+    
+        
+        foreach (range('A', 'E') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+        $sheet->getStyle('A1:E1')->getFont()->setBold(true);
+    
+        
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'export_camions_'.date('Y-m-d').'.xlsx';
+        $fileName = 'camions_export_'.date('Y-m-d').'.xlsx';
         $tempFile = tempnam(sys_get_temp_dir(), $fileName);
         $writer->save($tempFile);
-
+    
         return $this->file($tempFile, $fileName);
     }
 

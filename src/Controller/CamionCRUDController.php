@@ -175,7 +175,7 @@ final class CamionCRUDController extends AbstractController
                         $newFilename
                     );
                 } catch (FileException $e) {
-                    // Gérer l'exception si nécessaire
+
                 }
 
                 $camion->setImage($newFilename);
@@ -230,7 +230,7 @@ final class CamionCRUDController extends AbstractController
                         $newFilename
                     );
                 } catch (FileException $e) {
-                    // Gérer l'exception si nécessaire
+
                 }
 
                 $camion->setImage($newFilename);

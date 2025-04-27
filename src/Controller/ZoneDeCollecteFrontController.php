@@ -130,7 +130,7 @@ class ZoneDeCollecteFrontController extends AbstractController
 
         return $this->render('frontzone/camions_by_zone.html.twig', [
             'camions' => $camions,
-            'nomZone' => $nomZone
+            'nomZone' => $nomZone 
         ]);
     }
 }

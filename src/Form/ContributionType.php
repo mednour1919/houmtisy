@@ -43,7 +43,7 @@ class ContributionType extends AbstractType
             ->add('date_creation', DateTimeType::class, [
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
-                'required' => false, // Ce champ est optionnel
+                'required' => false, 
             ])
             ->add('statut', ChoiceType::class, [
                 'choices' => [
@@ -53,11 +53,11 @@ class ContributionType extends AbstractType
                 ],
                 'placeholder' => 'Sélectionnez un statut',
                 'attr' => ['class' => 'form-select'],
-                'required' => false, // Statut est optionnel
+                'required' => false, 
             ])
             ->add('projet', EntityType::class, [
                 'class' => Projet::class,
-                'choice_label' => 'nom', // Affiche le nom du projet
+                'choice_label' => 'nom', 
                 'attr' => ['class' => 'form-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'Le projet est obligatoire']),
