@@ -6,6 +6,7 @@ use App\Entity\Camion;
 use App\Form\CamionType;
 use App\Repository\CamionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +24,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class CamionCRUDController extends AbstractController
 {
     #[Route(name: 'app_camion_c_r_u_d_index', methods: ['GET'])]
-    public function index(CamionRepository $repository, Request $request): Response
+    public function index(CamionRepository $repository, Request $request, PaginatorInterface $paginator): Response
     {
         $searchTerm = $request->query->get('q');
         
@@ -34,7 +35,11 @@ final class CamionCRUDController extends AbstractController
                   ->setParameter('term', '%'.$searchTerm.'%');
         }
 
-        $camions = $query->getQuery()->getResult();
+        $camions = $paginator->paginate(
+            $query->getQuery(),
+            $request->query->getInt('page', 1),
+            10
+        );
 
         if ($request->isXmlHttpRequest()) {
             $camionsArray = array_map(function($camion) {
@@ -46,7 +51,7 @@ final class CamionCRUDController extends AbstractController
                     'capacity' => $camion->getCapacity(),
                     'image' => $camion->getImage(),
                 ];
-            }, $camions);
+            }, $camions->getItems());
             
             return new JsonResponse(['camions' => $camionsArray]);
         }
@@ -256,8 +261,6 @@ final class CamionCRUDController extends AbstractController
     }
 
     #[Route('/api/search', name: 'app_camion_search', methods: ['GET'])]
-
-
     public function search(CamionRepository $repository, Request $request): JsonResponse
     {
         $term = $request->query->get('term', '');
@@ -280,5 +283,4 @@ final class CamionCRUDController extends AbstractController
         
         return $this->json(['results' => $results]);
     }
-    
 }

@@ -1,4 +1,4 @@
- {% extends 'base.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Gestion des zones de collecte{% endblock %}
 
@@ -159,6 +159,13 @@
                     </tbody>
                 </table>
             </div>
+
+            {# BLOC DE PAGINATION AJOUTÉ ICI #}
+            {% if zone_de_collectes is not empty %}
+                <div class="d-flex justify-content-center p-4">
+                    {{ knp_pagination_render(zone_de_collectes) }}
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

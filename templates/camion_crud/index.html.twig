@@ -169,6 +169,13 @@
                     </tbody>
                 </table>
             </div>
+
+            {# Ajout de la pagination #}
+            {% if camions is not empty %}
+                <div class="d-flex justify-content-center p-4">
+                    {{ knp_pagination_render(camions) }}
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -6,6 +6,7 @@ use App\Entity\ZoneDeCollecte;
 use App\Form\ZoneDeCollecteType;
 use App\Repository\ZoneDeCollecteRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface; // Ajout de l'import pour la pagination
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +25,7 @@ use Twilio\Rest\Verify\V2\Service\Verification;
 final class ZoneDeCollecteCrudController extends AbstractController
 {
     #[Route(name: 'app_zone_de_collecte_crud_index', methods: ['GET'])]
-    public function index(ZoneDeCollecteRepository $repository, Request $request): Response
+    public function index(ZoneDeCollecteRepository $repository, Request $request, PaginatorInterface $paginator): Response
     {
         $searchableFields = [
             'nom' => [
@@ -67,7 +68,12 @@ final class ZoneDeCollecteCrudController extends AbstractController
             }
         }
 
-        $zones = $query->getQuery()->getResult();
+        // Modification unique pour ajouter la pagination
+        $zones = $paginator->paginate(
+            $query->getQuery(),
+            $request->query->getInt('page', 1),
+            10
+        );
 
         if ($request->isXmlHttpRequest()) {
             $zonesArray = array_map(function($zone) {
@@ -77,7 +83,7 @@ final class ZoneDeCollecteCrudController extends AbstractController
                     'population' => $zone->getPopulation(),
                     'tempsDeCollecte' => $zone->getTempsDeCollecte() ? $zone->getTempsDeCollecte()->format('H:i') : null,
                 ];
-            }, $zones);
+            }, $zones->getItems());
             
             return new JsonResponse(['zones' => $zonesArray]);
         }
@@ -91,6 +97,7 @@ final class ZoneDeCollecteCrudController extends AbstractController
         ]);
     }
 
+    // Toutes les autres méthodes restent inchangées ci-dessous...
     #[Route('/export', name: 'app_zone_export', methods: ['GET'])]
     public function exportToExcel(ZoneDeCollecteRepository $repository): BinaryFileResponse
     {
@@ -171,121 +178,121 @@ final class ZoneDeCollecteCrudController extends AbstractController
         return $this->redirectToRoute('app_zone_de_collecte_crud_index');
     }
 
-
     #[Route('/new', name: 'app_zone_de_collecte_crud_new', methods: ['GET', 'POST'])]
-public function new(Request $request, EntityManagerInterface $entityManager): Response
-{
-    $zoneDeCollecte = new ZoneDeCollecte();
-    $form = $this->createForm(ZoneDeCollecteType::class, $zoneDeCollecte);
-    $form->handleRequest($request);
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $zoneDeCollecte = new ZoneDeCollecte();
+        $form = $this->createForm(ZoneDeCollecteType::class, $zoneDeCollecte);
+        $form->handleRequest($request);
 
-    if ($form->isSubmitted() && $form->isValid()) {
-        // Configuration Twilio directe
-        $twilio = new Client(
-            'ACec96f0bb88a211167535857a14abb0e2', // Account SID
-            'e85b72fd960d0121f02616078aa53549'    // Auth Token
-        );
-        
-        $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
-        $fromNumber = '+17067024124';
-        $receiverNumber = $this->formatPhoneNumber('92636109');
-
-        try {
-            // Envoi du code de vérification
-            $verification = $twilio->verify->v2->services($verifyServiceSid)
-                ->verifications
-                ->create($receiverNumber, "sms");
-
-            $request->getSession()->set('pending_zone', $zoneDeCollecte);
-            $request->getSession()->set('verification_sid', $verification->sid);
-
-            return $this->redirectToRoute('app_verify_zone');
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Configuration Twilio directe
+            $twilio = new Client(
+                'ACec96f0bb88a211167535857a14abb0e2', // Account SID
+                'e85b72fd960d0121f02616078aa53549'    // Auth Token
+            );
             
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur lors de l\'envoi du SMS: '.$e->getMessage());
-        }
-    }
+            $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
+            $fromNumber = '+17067024124';
+            $receiverNumber = $this->formatPhoneNumber('92636109');
 
-    return $this->render('zone_de_collecte_crud/new.html.twig', [
-        'zone_de_collecte' => $zoneDeCollecte,
-        'form' => $form,
-    ]);
-}
+            try {
+                // Envoi du code de vérification
+                $verification = $twilio->verify->v2->services($verifyServiceSid)
+                    ->verifications
+                    ->create($receiverNumber, "sms");
 
-#[Route('/verify-zone', name: 'app_verify_zone', methods: ['GET', 'POST'])]
-public function verifyZone(Request $request, EntityManagerInterface $entityManager): Response
-{
-    $zoneDeCollecte = $request->getSession()->get('pending_zone');
-    $verificationSid = $request->getSession()->get('verification_sid');
+                $request->getSession()->set('pending_zone', $zoneDeCollecte);
+                $request->getSession()->set('verification_sid', $verification->sid);
 
-    if (!$zoneDeCollecte || !$verificationSid) {
-        $this->addFlash('error', 'Session expirée');
-        return $this->redirectToRoute('app_zone_de_collecte_crud_new');
-    }
-
-    if ($request->isMethod('POST')) {
-        $code = $request->request->get('verification_code');
-        
-        if (empty($code) || !preg_match('/^\d{6}$/', $code)) {
-            $this->addFlash('error', 'Code invalide (6 chiffres requis)');
-            return $this->render('zone_de_collecte_crud/verify.html.twig');
-        }
-
-        // Configuration Twilio directe
-        $twilio = new Client(
-            'ACec96f0bb88a211167535857a14abb0e2', // Account SID
-            'e85b72fd960d0121f02616078aa53549'    // Auth Token
-        );
-        
-        $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
-
-        try {
-            $verificationCheck = $twilio->verify->v2->services($verifyServiceSid)
-                ->verificationChecks
-                ->create([
-                    'verificationSid' => $verificationSid,
-                    'code' => $code
-                ]);
-
-            if ($verificationCheck->status === 'approved') {
-                $entityManager->persist($zoneDeCollecte);
-                $entityManager->flush();
-
-                // Envoi de confirmation
-                $twilio->messages->create(
-                    $this->formatPhoneNumber('92636109'),
-                    [
-                        'from' => '+17067024124',
-                        'body' => "Zone '{$zoneDeCollecte->getNom()}' ajoutée avec succès"
-                    ]
-                );
-
-                $request->getSession()->remove('pending_zone');
-                $request->getSession()->remove('verification_sid');
-
-                $this->addFlash('success', 'Zone ajoutée avec succès!');
-                return $this->redirectToRoute('app_zone_de_collecte_crud_index');
-            } else {
-                $this->addFlash('error', 'Code incorrect');
+                return $this->redirectToRoute('app_verify_zone');
+                
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur lors de l\'envoi du SMS: '.$e->getMessage());
             }
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur de vérification: '.$e->getMessage());
         }
+
+        return $this->render('zone_de_collecte_crud/new.html.twig', [
+            'zone_de_collecte' => $zoneDeCollecte,
+            'form' => $form,
+        ]);
     }
 
-    return $this->render('zone_de_collecte_crud/verify.html.twig');
-}
+    #[Route('/verify-zone', name: 'app_verify_zone', methods: ['GET', 'POST'])]
+    public function verifyZone(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $zoneDeCollecte = $request->getSession()->get('pending_zone');
+        $verificationSid = $request->getSession()->get('verification_sid');
 
-private function formatPhoneNumber(string $phoneNumber): string
-{
-    $cleaned = preg_replace('/[^0-9]/', '', $phoneNumber);
-    
-    if (strlen($cleaned) === 8) { // Format Tunisien 9XXXXXXX
-        return '+216'.$cleaned;
+        if (!$zoneDeCollecte || !$verificationSid) {
+            $this->addFlash('error', 'Session expirée');
+            return $this->redirectToRoute('app_zone_de_collecte_crud_new');
+        }
+
+        if ($request->isMethod('POST')) {
+            $code = $request->request->get('verification_code');
+            
+            if (empty($code) || !preg_match('/^\d{6}$/', $code)) {
+                $this->addFlash('error', 'Code invalide (6 chiffres requis)');
+                return $this->render('zone_de_collecte_crud/verify.html.twig');
+            }
+
+            // Configuration Twilio directe
+            $twilio = new Client(
+                'ACec96f0bb88a211167535857a14abb0e2', // Account SID
+                'e85b72fd960d0121f02616078aa53549'    // Auth Token
+            );
+            
+            $verifyServiceSid = 'VA820edd0de12d298cee2bace4c8247faf';
+
+            try {
+                $verificationCheck = $twilio->verify->v2->services($verifyServiceSid)
+                    ->verificationChecks
+                    ->create([
+                        'verificationSid' => $verificationSid,
+                        'code' => $code
+                    ]);
+
+                if ($verificationCheck->status === 'approved') {
+                    $entityManager->persist($zoneDeCollecte);
+                    $entityManager->flush();
+
+                    // Envoi de confirmation
+                    $twilio->messages->create(
+                        $this->formatPhoneNumber('92636109'),
+                        [
+                            'from' => '+17067024124',
+                            'body' => "Zone '{$zoneDeCollecte->getNom()}' ajoutée avec succès"
+                        ]
+                    );
+
+                    $request->getSession()->remove('pending_zone');
+                    $request->getSession()->remove('verification_sid');
+
+                    $this->addFlash('success', 'Zone ajoutée avec succès!');
+                    return $this->redirectToRoute('app_zone_de_collecte_crud_index');
+                } else {
+                    $this->addflash('error', 'Code incorrect');
+                }
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur de vérification: '.$e->getMessage());
+            }
+        }
+
+        return $this->render('zone_de_collecte_crud/verify.html.twig');
     }
-    
-    throw new \InvalidArgumentException('Numéro tunisien invalide');
-}
+
+    private function formatPhoneNumber(string $phoneNumber): string
+    {
+        $cleaned = preg_replace('/[^0-9]/', '', $phoneNumber);
+        
+        if (strlen($cleaned) === 8) {
+            return '+216'.$cleaned;
+        }
+        
+        throw new \InvalidArgumentException('Numéro tunisien invalide');
+    }
+
     #[Route('/mobile/{id}', name: 'app_zone_mobile_view')]
     public function mobileView(ZoneDeCollecte $zoneDeCollecte): Response
     {
@@ -321,7 +328,6 @@ private function formatPhoneNumber(string $phoneNumber): string
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
-
             return $this->redirectToRoute('app_zone_de_collecte_crud_index', [], Response::HTTP_SEE_OTHER);
         }
 
