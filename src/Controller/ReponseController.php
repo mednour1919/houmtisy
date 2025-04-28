@@ -10,15 +10,35 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Dompdf\Options; 
+use Dompdf\Dompdf;
 
 #[Route('/reponse')]
 class ReponseController extends AbstractController
 {
     #[Route('/', name: 'app_reponse_index', methods: ['GET'])]
-    public function index(ReponseRepository $reponseRepository): Response
+    public function index(Request $request, ReponseRepository $reponseRepository): Response
     {
+        // Récupérer le paramètre de recherche
+        $search = $request->query->get('search');
+        
+        if ($search) {
+            // Recherche des réponses filtrées par statut
+            $reponses = $reponseRepository->findByStatut($search);
+        } else {
+            // Récupérer toutes les réponses si aucune recherche n'est effectuée
+            $reponses = $reponseRepository->findAll();
+        }
+    
+        if ($request->isXmlHttpRequest()) {
+            // Rendre le tableau partiel pour la réponse AJAX
+            return $this->render('reponse/_table.html.twig', [
+                'reponses' => $reponses,
+            ]);
+        }
+    
         return $this->render('reponse/index.html.twig', [
-            'reponses' => $reponseRepository->findAll(),
+            'reponses' => $reponses,
         ]);
     }
 
@@ -89,5 +109,44 @@ class ReponseController extends AbstractController
         }
 
         return $this->redirectToRoute('app_reponse_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/Reponse/download/{id_reponse}', name: 'reponse_download')]
+    public function downloadPdf(int $id_reponse, ReponseRepository $reponseRepository, EntityManagerInterface $entityManager): Response
+    {
+        // 🔹 Récupérer le cours depuis la base de données
+        $reponse = $reponseRepository->find($id_reponse);
+    
+        // Vérifier si le cours existe
+        if (!$reponse) {
+            throw $this->createNotFoundException('Reponse non trouvé');
+        }
+
+       
+
+        // 🔹 Configurer DomPDF
+        $pdfOptions = new Options();
+        $pdfOptions->set('defaultFont', 'Arial');
+    
+        $dompdf = new Dompdf($pdfOptions);
+    
+        // 🔹 Générer le HTML avec les données du cours
+        $html = $this->renderView('reponse/pdf.html.twig', [
+            'reponse' => $reponse
+        ]);
+    
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+    
+        // 🔹 Télécharger le PDF avec un nom dynamique
+        return new Response(
+            $dompdf->output(),
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="reponse_' . $reponse->getIdReponse() . '.pdf"',
+            ]
+        );
     }
 }

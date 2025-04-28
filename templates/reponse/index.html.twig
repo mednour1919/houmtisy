@@ -158,6 +158,10 @@
 
     <h1>Reponse index</h1>
 
+      <form id="searchForm" method="get" action="{{ path('app_reponse_index') }}">
+    <input type="text" id="search" name="search" placeholder="Rechercher par statut..." class="form-control" />
+</form>
+
     <table class="table">
         <thead>
             <tr>

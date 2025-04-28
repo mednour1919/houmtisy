@@ -40,4 +40,16 @@ class ReponseRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findByStatut(?string $statut = null)
+    {
+        $qb = $this->createQueryBuilder('r');
+    
+        if ($statut) {
+            $qb->andWhere('r.statut LIKE :statut')
+               ->setParameter('statut', '%' . $statut . '%');
+        }
+    
+        return $qb->getQuery()->getResult();
+    }
 }

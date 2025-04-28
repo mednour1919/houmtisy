@@ -175,6 +175,23 @@
 
     <h1>Signalement index</h1>
 
+       <div class="left-filter">
+  <form id="sortForm" method="get">
+    <label for="sort">Trier par :</label>
+    <select name="sort" id="sort" onchange="document.getElementById('sortForm').submit();">
+        <option value="">-- Choisir --</option>
+        <option value="downloads_asc" {{ sort == 'downloads_asc' ? 'selected' : '' }}>Date croissante</option>
+        <option value="downloads_desc" {{ sort == 'downloads_desc' ? 'selected' : '' }}>Date décroissante</option>
+    </select>
+  </form>
+</div>
+
+<script>
+    document.getElementById("sort").addEventListener("change", function() {
+        document.getElementById("sortForm").submit(); // Soumet le formulaire automatiquement au changement
+    });
+</script>
+
     <table class="table">
         <thead>
             <tr>

@@ -17,6 +17,15 @@ class ReponseType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+        
+        ->add('signalement', EntityType::class, [
+            'class' => Signalement::class,
+            'choice_label' => 'description', // Ou autre champ lisible du Signalement
+            'label' => 'Signalement associé',
+            'placeholder' => 'Sélectionner un signalement',
+            'required' => true,
+            'attr' => ['class' => 'form-select'], // pour joli rendu Bootstrap
+        ])
             ->add('reponse', TextareaType::class, [
                 'label' => 'Contenu de la réponse',
                 'attr' => ['rows' => 5],
@@ -29,29 +38,24 @@ class ReponseType extends AbstractType
             ])
             ->add('statut', ChoiceType::class, [
                 'choices' => [
+                    'En attente' => 'en_attente',
                     'En cours' => 'en_cours',
-                    'Traité' => 'traite',
-                    'Clos' => 'clos'
+                    'Résolu' => 'resolu',
                 ],
-                'label' => 'Statut',
+                'label' => 'Statut de la réponse',
+                'attr' => ['class' => 'form-select'],
                 'required' => true
             ]);
 
-        if ($options['include_signalement_field']) {
-            $builder->add('signalement', EntityType::class, [
-                'class' => Signalement::class,
-                'label' => 'Signalement associé',
-                'placeholder' => 'Sélectionnez un signalement',
-                'required' => true
-            ]);
-        }
+        
+        
     }
 
+ 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => Reponse::class,
-            'include_signalement_field' => true
         ]);
     }
 }

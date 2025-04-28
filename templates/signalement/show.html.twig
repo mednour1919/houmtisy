@@ -1,15 +1,33 @@
-#[Route('/{id_signalement}', name: 'app_signalement_show', methods: ['GET'])]
-public function show(Signalement $signalement): Response
-{
-    $image = null;
-    if ($signalement->getImage()) {
-        $imageContent = stream_get_contents($signalement->getImage());
-        rewind($signalement->getImage());
-        $image = base64_encode($imageContent);
-    }
+{% extends 'base.html.twig' %}
 
-    return $this->render('signalement/show.html.twig', [
-        'signalement' => $signalement,
-        'image' => $image,
-    ]);
-}
+{% block title %}Reponse{% endblock %}
+
+{% block body %}
+<h1>Détail du Signalement</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Description</th>
+                <td>{{ signalement.description }}</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+            </tr>
+        
+{% if image %}
+    <img src="data:image/jpeg;base64,{{ image }}" alt="Image du signalement" style="max-width:500px;">
+{% else %}
+    <p>Aucune image associée</p>
+{% endif %}
+        </tbody>
+    </table>
+  
+                    
+    <a href="{{ path('app_signalement_index') }}">back to list</a>
+
+    <a href="{{ path('app_signalement_edit', {'id_signalement': signalement.id_signalement}) }}">edit</a>
+
+    {{ include('signalement/_delete_form.html.twig') }}
+{% endblock %}
