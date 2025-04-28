@@ -1,0 +1,13 @@
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+# config/routes.yaml
+two_factor_login:
+    path: /2fa-login
+    controller: App\Controller\SecurityController::twoFactorLogin
+
+two_factor_check:
+    path: /2fa-check
+    controller: App\Controller\SecurityController::twoFactorCheck
