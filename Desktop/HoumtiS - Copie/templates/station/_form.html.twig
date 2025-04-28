@@ -11,37 +11,17 @@
                 </div>
             {% endif %}
             
-            <div class="mb-3">
-                {{ form_label(form.nomStation) }}
-                {{ form_widget(form.nomStation) }}
-                <div class="invalid-feedback d-block">
-                    {{ form_errors(form.nomStation) }}
+            <div class="row">
+                <div class="col-md-6">
+                    {{ form_row(form.nomStation) }}
+                    {{ form_row(form.capacite) }}
+                    {{ form_row(form.zone) }}
+                    {{ form_row(form.status) }}
                 </div>
-                <small class="form-text text-muted">Entrez un nom de station entre 3 et 50 caractères</small>
-            </div>
-            
-            <div class="mb-3">
-                {{ form_label(form.capacite) }}
-                {{ form_widget(form.capacite) }}
-                <div class="invalid-feedback d-block">
-                    {{ form_errors(form.capacite) }}
-                </div>
-                <small class="form-text text-muted">La capacité doit être un nombre positif inférieur à 1000</small>
-            </div>
-            
-            <div class="mb-3">
-                {{ form_label(form.zone) }}
-                {{ form_widget(form.zone) }}
-                <div class="invalid-feedback d-block">
-                    {{ form_errors(form.zone) }}
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                {{ form_label(form.status) }}
-                {{ form_widget(form.status) }}
-                <div class="invalid-feedback d-block">
-                    {{ form_errors(form.status) }}
+                <div class="col-md-6">
+                    {{ form_row(form.latitude) }}
+                    {{ form_row(form.longitude) }}
+                    <div id="map" style="height: 300px; margin-bottom: 20px;"></div>
                 </div>
             </div>
         </div>
@@ -51,3 +31,37 @@
         </div>
     </div>
 {{ form_end(form) }}
+
+{% block javascripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var map = L.map('map').setView([33.5731, -7.5898], 13); // Coordonnées de Casablanca
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker;
+        
+        // Ajouter un marqueur si les coordonnées existent
+        var lat = document.querySelector('#station_latitude').value;
+        var lng = document.querySelector('#station_longitude').value;
+        if (lat && lng) {
+            marker = L.marker([lat, lng]).addTo(map);
+            map.setView([lat, lng], 13);
+        }
+
+        // Mettre à jour les coordonnées lors d'un clic sur la carte
+        map.on('click', function(e) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker(e.latlng).addTo(map);
+            document.querySelector('#station_latitude').value = e.latlng.lat.toFixed(6);
+            document.querySelector('#station_longitude').value = e.latlng.lng.toFixed(6);
+        });
+    });
+</script>
+{% endblock %}

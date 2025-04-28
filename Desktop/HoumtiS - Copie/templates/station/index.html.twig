@@ -4,140 +4,82 @@
 
 {% block body %}
 <div class="container mt-4">
-    {# Header avec bouton d'ajout #}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Liste des Stations</h1>
-        <a href="{{ path('app_station_new') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Ajouter une station
-        </a>
-    </div>
+    <h1>Gestion des Stations</h1>
 
-    {# Filtre #}
-    <div class="card mb-4 shadow-sm">
+    {# Barre de recherche #}
+    <div class="card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3">
+            <div class="row">
                 <div class="col-md-6">
-                    <label class="form-label">Filtrer par zone :</label>
                     <div class="input-group">
-                        <input type="text" name="zone" value="{{ zone_search }}" 
-                               class="form-control" placeholder="Entrez une zone...">
-                        <button type="submit" class="btn btn-outline-primary">
-                            <i class="fas fa-search me-1"></i> Filtrer
+                        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher une station..." value="{{ search|default('') }}">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    {# Tableau #}
-    <div class="card shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nom</th>
-                        <th class="text-end">Capacité</th>
-                        <th>Zone</th>
-                        <th>Statut</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for station in pagination %}
-                    <tr>
-                        <td>{{ station.nomStation }}</td>
-                        <td class="text-end">{{ station.capacite }}</td>
-                        <td>
-                            <span class="badge bg-secondary">{{ station.zone }}</span>
-                        </td>
-                        <td>
-                            <span class="badge {{ station.status == 'Actif' ? 'bg-success' : 'bg-warning' }}">
-                                {{ station.status }}
-                            </span>
-                        </td>
-                        <td class="text-end text-nowrap">
-                            <a href="{{ path('app_station_show', {'id_station': station.id_station}) }}" 
-                               class="btn btn-sm btn-outline-primary" title="Voir">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ path('app_station_edit', {'id_station': station.id_station}) }}" 
-                               class="btn btn-sm btn-outline-secondary" title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="{{ path('app_station_delete', {'id_station': station.id_station}) }}" 
-                                  method="post" class="d-inline"
-                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette station ?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ station.id_station) }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Aucune station trouvée
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {# Pagination et stats #}
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <span class="fw-bold">Capacité totale :</span> {{ total_capacite }}
+                <div class="col-md-4">
+                    <select id="zoneFilter" class="form-select">
+                        <option value="">Toutes les zones</option>
+                        <option value="Nord" {% if zone_search == 'Nord' %}selected{% endif %}>Nord</option>
+                        <option value="Sud" {% if zone_search == 'Sud' %}selected{% endif %}>Sud</option>
+                        <option value="Est" {% if zone_search == 'Est' %}selected{% endif %}>Est</option>
+                        <option value="Ouest" {% if zone_search == 'Ouest' %}selected{% endif %}>Ouest</option>
+                        <option value="Centre" {% if zone_search == 'Centre' %}selected{% endif %}>Centre</option>
+                    </select>
                 </div>
-                <div>
-                    <span class="fw-bold">Nombre de stations :</span> {{ station_count }}
+                <div class="col-md-2">
+                    <a href="{{ path('app_station_new') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-plus"></i> Nouvelle Station
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-    <nav aria-label="Pagination">
-        <ul class="pagination justify-content-end mb-0">
-            {% if pagination.currentPageNumber > 1 %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {'page': 1}|merge(app.request.query.all)) }}">
-                        <i class="fas fa-angle-double-left"></i>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {'page': pagination.currentPageNumber - 1}|merge(app.request.query.all)) }}">
-                        <i class="fas fa-angle-left"></i>
-                    </a>
-                </li>
-            {% endif %}
+    </div>
 
-            {% for page in range(max(1, pagination.currentPageNumber - 2), min(pagination.pageCount, pagination.currentPageNumber + 2)) %}
-                <li class="page-item {{ page == pagination.currentPageNumber ? 'active' : '' }}">
-                    <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {'page': page}|merge(app.request.query.all)) }}">
-                        {{ page }}
-                    </a>
-                </li>
-            {% endfor %}
+    {# Contenu dynamique #}
+    <div id="stationsContent">
+        {{ include('station/_stations_list.html.twig') }}
+    </div>
+</div>
+{% endblock %}
 
-            {% if pagination.currentPageNumber < pagination.pageCount %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {'page': pagination.currentPageNumber + 1}|merge(app.request.query.all)) }}">
-                        <i class="fas fa-angle-right"></i>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="{{ path(app.request.attributes.get('_route'), {'page': pagination.pageCount}|merge(app.request.query.all)) }}">
-                        <i class="fas fa-angle-double-right"></i>
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-</div>
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const zoneFilter = document.getElementById('zoneFilter');
+            const clearSearch = document.getElementById('clearSearch');
+            const stationsContent = document.getElementById('stationsContent');
+            let searchTimeout;
+
+            function updateResults() {
+                const searchTerm = searchInput.value;
+                const zone = zoneFilter.value;
+                
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('search', searchTerm);
+                    url.searchParams.set('zone', zone);
+                    url.searchParams.set('ajax', '1');
+
+                    fetch(url)
+                        .then(response => response.text())
+                        .then(html => {
+                            stationsContent.innerHTML = html;
+                        });
+                }, 300);
+            }
+
+            searchInput.addEventListener('input', updateResults);
+            zoneFilter.addEventListener('change', updateResults);
+            
+            clearSearch.addEventListener('click', () => {
+                searchInput.value = '';
+                updateResults();
+            });
+        });
+    </script>
 {% endblock %}

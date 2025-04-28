@@ -3,11 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\Station;
+use App\Form\StationType;
 use App\Repository\StationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Knp\Component\Pager\PaginatorInterface;
 
@@ -17,23 +19,29 @@ final class StationController extends AbstractController
     #[Route('/', name: 'app_station_index', methods: ['GET'])]
     public function index(Request $request, StationRepository $stationRepository, PaginatorInterface $paginator): Response
     {
-        // Récupérer le paramètre de recherche par zone
+        $searchTerm = $request->query->get('search');
         $zone = $request->query->get('zone');
         
-        // Si une zone est spécifiée, utiliser la méthode de recherche par zone
+        $queryBuilder = $stationRepository->createQueryBuilder('s');
+        
+        if ($searchTerm) {
+            $queryBuilder
+                ->where('s.nomStation LIKE :search')
+                ->orWhere('s.zone LIKE :search')
+                ->setParameter('search', '%' . $searchTerm . '%');
+        }
+        
         if ($zone) {
-            $queryBuilder = $stationRepository->createQueryBuilder('s')
-                ->where('s.zone LIKE :zone')
-                ->setParameter('zone', '%' . $zone . '%');
-        } else {
-            $queryBuilder = $stationRepository->createQueryBuilder('s');
+            $queryBuilder
+                ->andWhere('s.zone = :zone')
+                ->setParameter('zone', $zone);
         }
 
         // Pagination
         $pagination = $paginator->paginate(
-            $queryBuilder, // La requête
-            $request->query->getInt('page', 1), // Page courante
-            10 // Nombre d'éléments par page
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            10
         );
 
         // Calculer la capacité totale
@@ -44,9 +52,18 @@ final class StationController extends AbstractController
         // Compter le nombre total de stations
         $stationCount = $pagination->getTotalItemCount();
 
+        if ($request->get('ajax')) {
+            return $this->render('station/_stations_list.html.twig', [
+                'pagination' => $pagination,
+                'total_capacite' => $totalCapacite,
+                'station_count' => $stationCount,
+            ]);
+        }
+
         return $this->render('station/index.html.twig', [
             'pagination' => $pagination,
             'zone_search' => $zone,
+            'search' => $searchTerm,
             'total_capacite' => $totalCapacite,
             'station_count' => $stationCount,
         ]);
