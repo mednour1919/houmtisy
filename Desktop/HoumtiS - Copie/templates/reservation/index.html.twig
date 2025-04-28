@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Réservations{% endblock %}
+
+{% block body %}
+<h1 class="text-center my-4">Liste des Réservations</h1>
+
+<div class="container">
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+       
+                <th>Numéro de place</th>
+                <th>Date de réservation</th>
+                <th>Temps</th>
+                <th>Marque</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+                <tr>
+                    
+                    <td>{{ reservation.numPlace }}</td>
+                    <td>{{ reservation.dateReservation|date('Y-m-d H:i') }}</td>
+                    <td>{{ reservation.temps }}</td>
+                    <td>{{ reservation.marque }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

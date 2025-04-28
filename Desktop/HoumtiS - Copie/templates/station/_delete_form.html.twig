@@ -1,0 +1,8 @@
+
+{# templates/station/_delete_form.html.twig #}
+<form method="post" action="{{ path('app_station_delete', {'id_station': station.id_station}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette station?');" class="d-inline">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ station.id_station) }}">
+    <button class="btn btn-danger">
+        <i class="fas fa-trash"></i> Supprimer
+    </button>
+</form>
