@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Verify Code{% endblock %}
+
+{% block body %}
+    <h1>Verify Your Code</h1>
+
+  
+
+    <form method="post">
+        <label for="reset_code">Enter the verification code sent to your email:</label><br>
+        <input type="text" name="reset_code" id="reset_code" required><br><br>
+        <button type="submit">Verify</button>
+    </form>
+{% endblock %}
