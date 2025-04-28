@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: 'App\Repository\ProjetRepository')]
 class Projet
@@ -20,15 +19,15 @@ class Projet
     private ?string $statut = null;
 
     #[ORM\Column(type: 'float')]
-    private float $budget;
+    private float $budget = 0.0;
 
     #[ORM\Column(type: 'float', nullable: true)]
-    private ?float $depense = null;
+    private ?float $depense = 0.0;
 
-    #[ORM\Column(type: 'date', nullable: true, name: 'dateDebut')]
+    #[ORM\Column(type: 'date', nullable: true, name: 'date_debut')]
     private ?\DateTimeInterface $dateDebut = null;
 
-    #[ORM\Column(name: 'dateFin', type: 'date', nullable: true)]
+    #[ORM\Column(type: 'date', nullable: true, name: 'date_fin')]
     private ?\DateTimeInterface $dateFin = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
@@ -36,8 +35,6 @@ class Projet
 
     #[ORM\ManyToOne(targetEntity: Fournisseur::class)]
     private ?Fournisseur $fournisseur = null;
-
-    // Getters and setters ...
 
     public function getId(): ?int
     {
@@ -79,7 +76,7 @@ class Projet
 
     public function getDepense(): ?float
     {
-        return $this->depense;
+        return $this->depense ?? 0;
     }
 
     public function setDepense(?float $depense): self
@@ -131,4 +128,21 @@ class Projet
         $this->fournisseur = $fournisseur;
         return $this;
     }
+
+   // src/Entity/Projet.php
+
+// ...
+
+// src/Entity/Projet.php
+
+public function getSolde(): float
+{
+    return $this->getBudget() - $this->getDepense();
+}
+
+// Ajoutez aussi cette méthode pour que Twig puisse accéder à la propriété
+public function getSoldeProperty(): float
+{
+    return $this->getSolde();
+}
 }

@@ -1,38 +1,26 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Contribution{% endblock %}
+{% block title %}Détails de la Contribution{% endblock %}
 
 {% block body %}
-    <h1>Contribution</h1>
+    <div class="container mt-4">
+        <h1>Détails de la Contribution</h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ contribution.id }}</td>
-            </tr>
-            <tr>
-                <th>Message</th>
-                <td>{{ contribution.message }}</td>
-            </tr>
-            <tr>
-                <th>Type</th>
-                <td>{{ contribution.type }}</td>
-            </tr>
-            <tr>
-                <th>Date_creation</th>
-                <td>{{ contribution.dateCreation ? contribution.dateCreation|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Statut</th>
-                <td>{{ contribution.statut }}</td>
-            </tr>
-        </tbody>
-    </table>
+        <dl class="row">
+            <dt class="col-sm-3">Id</dt>
+            <dd class="col-sm-9">{{ contribution.id }}</dd>
 
-    <a href="{{ path('app_contribution_index') }}">back to list</a>
+            <dt class="col-sm-3">Projet</dt>
+            <dd class="col-sm-9">{{ contribution.projet.nom }}</dd>
 
-    <a href="{{ path('app_contribution_edit', {'id': contribution.id}) }}">edit</a>
+            <dt class="col-sm-3">Type</dt>
+            <dd class="col-sm-9">{{ contribution.type }}</dd>
 
-    {{ include('contribution/_delete_form.html.twig') }}
+            <dt class="col-sm-3">Statut</dt>
+            <dd class="col-sm-9">{{ contribution.statut }}</dd>
+        </dl>
+
+        <a href="{{ path('app_contribution_edit', {'id': contribution.id}) }}" class="btn btn-warning">Modifier</a>
+        <a href="{{ path('app_contribution_index') }}" class="btn btn-secondary">Retour à la liste</a>
+    </div>
 {% endblock %}

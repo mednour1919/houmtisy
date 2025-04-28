@@ -20,7 +20,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             {{ form_label(form.nom) }}
-                            {{ form_widget(form.nom) }}
+                            {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
                             <div class="text-danger">
                                 {{ form_errors(form.nom) }}
                             </div>
@@ -29,7 +29,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             {{ form_label(form.statut) }}
-                            {{ form_widget(form.statut) }}
+                            {{ form_widget(form.statut, {'attr': {'class': 'form-select'}}) }}
                             <div class="text-danger">
                                 {{ form_errors(form.statut) }}
                             </div>
@@ -43,7 +43,7 @@
                             {{ form_label(form.budget) }}
                             <div class="input-group">
                                 <span class="input-group-text">€</span>
-                                {{ form_widget(form.budget) }}
+                                {{ form_widget(form.budget, {'attr': {'class': 'form-control'}}) }}
                             </div>
                             <div class="text-danger">
                                 {{ form_errors(form.budget) }}
@@ -55,7 +55,7 @@
                             {{ form_label(form.depense) }}
                             <div class="input-group">
                                 <span class="input-group-text">€</span>
-                                {{ form_widget(form.depense) }}
+                                {{ form_widget(form.depense, {'attr': {'class': 'form-control'}}) }}
                             </div>
                             <div class="text-danger">
                                 {{ form_errors(form.depense) }}
@@ -68,7 +68,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             {{ form_label(form.dateDebut) }}
-                            {{ form_widget(form.dateDebut) }}
+                            {{ form_widget(form.dateDebut, {'attr': {'class': 'form-control'}}) }}
                             <div class="text-danger">
                                 {{ form_errors(form.dateDebut) }}
                             </div>
@@ -77,7 +77,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             {{ form_label(form.dateFin) }}
-                            {{ form_widget(form.dateFin) }}
+                            {{ form_widget(form.dateFin, {'attr': {'class': 'form-control'}}) }}
                             <div class="text-danger">
                                 {{ form_errors(form.dateFin) }}
                             </div>
@@ -87,7 +87,7 @@
 
                 <div class="mb-3">
                     {{ form_label(form.description) }}
-                    {{ form_widget(form.description) }}
+                    {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '3'}}) }}
                     <div class="text-danger">
                         {{ form_errors(form.description) }}
                     </div>
@@ -95,7 +95,7 @@
 
                 <div class="mb-3">
                     {{ form_label(form.fournisseur) }}
-                    {{ form_widget(form.fournisseur) }}
+                    {{ form_widget(form.fournisseur, {'attr': {'class': 'form-select'}}) }}
                     <div class="text-danger">
                         {{ form_errors(form.fournisseur) }}
                     </div>
